@@ -14,3 +14,9 @@ CS3307 课程大作业：情感分析
 测试集准确率：0.8106
 
 ![Alt text](image/image1.png)
+
+## Transformers Teacher蒸馏模型（GPU训练）
+
+代码见 Trans_Teacher.py
+模型参数文件在models文件夹下， 从[distilbert-base-uncased](https://huggingface.co/distilbert-base-uncased)处下载
+目前取0.1％的数据作为训练集训练得到准确率为 80% 左右。 
