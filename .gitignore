@@ -2,7 +2,6 @@ data/*
 .vscode
 logs
 results
-models/*
 models/distilbert-base-uncased/pytorch_model.bin
 models/distilbert-base-uncased/tf_model.h5
 __pycache__
