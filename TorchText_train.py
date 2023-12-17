@@ -8,7 +8,7 @@ from torch.utils.data import random_split
 import time
 from transformers import DistilBertTokenizerFast
 from datasets import SentimentDataset
-from models import WordAVGModel
+from models import WordAVGModel,RNN
 from train import *
 SEED = 1234
 torch.manual_seed(SEED)
@@ -22,11 +22,11 @@ if __name__ == '__main__':
     test_data = pd.read_csv("data/testdata.manual.2009.06.14.csv" ,names=['label', 'id', 'day', 'query', 'user', 'tweets'],encoding = "ISO-8859-1")
     dataset = SentimentDataset(train_data) # 构建数据集，可以传入参数词向量的最大长度:maxlength
 
-    ## 缩小数据集
-    train_size = int(0.9 * len(dataset))   
-    valid_size = len(dataset) - train_size
-    train_dataset, dataset = random_split(dataset, [train_size, valid_size])
-    ##
+    # ## 缩小数据集
+    # train_size = int(0.9 * len(dataset))   
+    # valid_size = len(dataset) - train_size
+    # train_dataset, dataset = random_split(dataset, [train_size, valid_size])
+    # ##
 
     train_size = int(0.9 * len(dataset))  # 使用90%的数据作为训练集
     valid_size = len(dataset) - train_size
@@ -44,7 +44,8 @@ if __name__ == '__main__':
     OUTPUT_DIM = 1
     PAD_IDX = tokenizer.pad_token_id
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = WordAVGModel(INPUT_DIM, EMBEDDING_DIM, OUTPUT_DIM, PAD_IDX)
+    # model = WordAVGModel(INPUT_DIM, EMBEDDING_DIM, OUTPUT_DIM, PAD_IDX)
+    model = RNN(INPUT_DIM, EMBEDDING_DIM, 30,OUTPUT_DIM,2, True,0.1,PAD_IDX)
     optimizer = optim.Adam(model.parameters())
     criterion = nn.BCEWithLogitsLoss()   
     model = model.to(device)
@@ -53,4 +54,4 @@ if __name__ == '__main__':
 
     train(N_EPOCHS,model,train_dataloader,valid_dataloader, device, optimizer, criterion,batch_size,save_path="results/wordavgmodel/wordavgmodel.pt")
     model = WordAVGModel(INPUT_DIM, EMBEDDING_DIM, OUTPUT_DIM, PAD_IDX)
-    test(test_dataloader,device,model,"results/wordavgmodel/wordavgmodel.pt")
+    test(test_dataloader,device,model,"results/RNNmodel/RNNmodel.pt")

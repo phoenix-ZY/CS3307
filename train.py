@@ -34,7 +34,7 @@ def bert_train(num_epochs,model,train_dataloader,valid_dataloader,device,optimiz
             predictions = torch.argmax(logits, dim=1)
             now_right =  (predictions == labels).sum()
             right += now_right
-            loop.set_description(f'Epoch [{epoch}/{num_epochs}]')
+            loop.set_description(f'Epoch [{epoch + 1}/{num_epochs}]')
             loop.set_postfix(loss=loss, acc=float(now_right)/float(batch_size))
 
 
@@ -98,7 +98,7 @@ def train(num_epochs,model,train_dataloader,valid_dataloader,device,optimizer,cr
             now_right =  (torch.round(torch.sigmoid(outputs)) == labels).sum()
             right += now_right
             if times %50 == 0:
-                loop.set_description(f'Epoch [{epoch}/{num_epochs}]')
+                loop.set_description(f'Epoch [{epoch + 1}/{num_epochs}]')
                 loop.set_postfix(loss=loss, acc=float(now_right)/float(batch_size))
 
         avg_loss = total_loss / len(train_dataloader)
@@ -123,7 +123,7 @@ def train(num_epochs,model,train_dataloader,valid_dataloader,device,optimizer,cr
                 total_loss += loss.item()
                 now_right =  (torch.round(torch.sigmoid(outputs)) == labels).sum()
                 right += now_right
-                loop.set_description(f'Epoch [{epoch}/{num_epochs}]')
+                loop.set_description(f'Epoch [{epoch + 1}/{num_epochs}]')
                 loop.set_postfix(loss=loss, acc=float(now_right)/float(batch_size))
 
         valid_accuracy = float(right)/(float(len(valid_dataloader) * batch_size))
