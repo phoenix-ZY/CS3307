@@ -18,26 +18,26 @@ if __name__ == '__main__':
 
     tokenizer =DistilBertTokenizerFast.from_pretrained("models/distilbert-base-uncased")
 
-    train_data = pd.read_csv("data/training.1600000.processed.noemoticon.csv" ,names=['label', 'id', 'day', 'query', 'user', 'tweets'],encoding = "ISO-8859-1")
-    test_data = pd.read_csv("data/testdata.manual.2009.06.14.csv" ,names=['label', 'id', 'day', 'query', 'user', 'tweets'],encoding = "ISO-8859-1")
-    dataset = SentimentDataset(train_data) # 构建数据集，可以传入参数词向量的最大长度:maxlength
+    train_data = pd.read_csv("data/train_processed.csv" ,encoding = "ISO-8859-1",dtype={'tweets': str, 'label':int})
+    test_data = pd.read_csv("data/test_processed.csv" ,encoding = "ISO-8859-1",dtype={'tweets': str, 'label':int})
+    dataset = SentimentDataset(train_data,maxlength=100) # 构建数据集，可以传入参数词向量的最大长度:maxlength
 
-    # ## 缩小数据集
-    # train_size = int(0.9 * len(dataset))   
-    # valid_size = len(dataset) - train_size
-    # train_dataset, dataset = random_split(dataset, [train_size, valid_size])
-    # ##
+    ## 缩小数据集
+    train_size = int(0.99 * len(dataset))   
+    valid_size = len(dataset) - train_size
+    train_dataset, dataset = random_split(dataset, [train_size, valid_size])
+    ##
 
     train_size = int(0.9 * len(dataset))  # 使用90%的数据作为训练集
     valid_size = len(dataset) - train_size
 
     train_dataset, valid_dataset = random_split(dataset, [train_size, valid_size])
-    test_dataset = SentimentDataset(test_data)
+    test_dataset = SentimentDataset(test_data,maxlength=100)
 
     batch_size = 64
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
-    test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+    test_dataloader = DataLoader(test_dataset, batch_size=2, shuffle=False)
 
     INPUT_DIM = 30522
     EMBEDDING_DIM = 100
@@ -52,6 +52,6 @@ if __name__ == '__main__':
     criterion = criterion.to(device)
     N_EPOCHS = 10
 
-    train(N_EPOCHS,model,train_dataloader,valid_dataloader, device, optimizer, criterion,batch_size,save_path="results/wordavgmodel/wordavgmodel.pt")
-    model = WordAVGModel(INPUT_DIM, EMBEDDING_DIM, OUTPUT_DIM, PAD_IDX)
+    train(N_EPOCHS,model,train_dataloader,valid_dataloader, device, optimizer, criterion,batch_size,save_path="results/RNNmodel/RNNmodel.pt")
+    model = RNN(INPUT_DIM, EMBEDDING_DIM, 30,OUTPUT_DIM,2, True,0.1,PAD_IDX)
     test(test_dataloader,device,model,"results/RNNmodel/RNNmodel.pt")

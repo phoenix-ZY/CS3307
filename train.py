@@ -61,7 +61,7 @@ def bert_train(num_epochs,model,train_dataloader,valid_dataloader,device,optimiz
                 print(predictions)
                 print(labels)
                 right += now_right
-                loop.set_description(f'Epoch [{epoch}/{num_epochs}]')
+                loop.set_description(f'Epoch [{epoch + 1}/{num_epochs}]')
                 loop.set_postfix(loss=loss, acc=float(now_right)/float(batch_size))
 
         valid_accuracy = float(right)/(float(len(valid_dataloader) * batch_size))
