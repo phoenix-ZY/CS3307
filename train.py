@@ -2,6 +2,7 @@ from transformers import DistilBertForSequenceClassification, AdamW
 import torch
 from utils import *
 from tqdm import tqdm
+import numpy as np
 def bert_train(num_epochs,model,train_dataloader,valid_dataloader,device,optimizer,batch_size,load_path= "",save_path= ""):
     if load_path:
         model = DistilBertForSequenceClassification.from_pretrained(load_path, num_labels=2)
@@ -186,7 +187,7 @@ def save_results(test_dataloader,device,model_name):
     def save_intermediate_results(module, input, output):
         intermediate_outputs[module] = output
     model.eval()
-    batch_size = 16
+    batch_size = 359
     device = "cpu"
     layer_hooks = []
     for number in range(len(model.distilbert.transformer.layer)):
@@ -198,12 +199,13 @@ def save_results(test_dataloader,device,model_name):
             input_ids = batch['sentence'].to(device)
             attention_mask = batch['attention_mask'].to(device)
             labels = batch['label'].to(device)
+            np.save(f"results/middleresults/labels.npy", labels.numpy())  
             outputs = model(input_ids, attention_mask=attention_mask)
             break
     number = 0
     for name,output in intermediate_outputs.items():
         print(output[0].shape)
-        torch.save(output, f"results/middleresults/transfomer_{number}output.pt")
+        np.save(f"results/middleresults/transfomer_{number}output.npy", output[0].numpy())  
         number += 1
 
     for hook in layer_hooks:

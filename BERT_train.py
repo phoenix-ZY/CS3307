@@ -37,7 +37,7 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
 
-    bert_train(num_epochs, model, train_dataloader,valid_dataloader, device,optimizer,batch_size,load_path = 'results/model', save_path = 'results/model1')
+    # bert_train(num_epochs, model, train_dataloader,valid_dataloader, device,optimizer,batch_size,load_path = 'results/model', save_path = 'results/model1')
     # save_results(test_dataloader,device = torch.device('cpu'),model_name = 'results/model1')
 
     bert_test(test_dataloader,device, 'results/model1')
