@@ -4,10 +4,13 @@ from transformers import DistilBertTokenizerFast
 from utils import *
 from torchtext.data.utils import get_tokenizer
 class SentimentDataset(Dataset):
-    def __init__(self,data) -> None:
-        self.sentences, self.labels = preprocess(data)
+    def __init__(self,data,maxlength = 0) -> None:
+        self.sentences, self.labels = easy_preprocess(data)
         self.tokenizer =DistilBertTokenizerFast.from_pretrained("models/distilbert-base-uncased")
-        self.max_length = self.getmax_length()
+        if(maxlength):
+            self.max_length = maxlength
+        else:
+            self.max_length = self.getmax_length()
     def __len__(self):
         return len(self.sentences)
     def __getitem__(self, idx):
