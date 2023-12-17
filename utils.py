@@ -8,6 +8,7 @@ from nltk import pos_tag
 import pandas as pd
 from tqdm import tqdm
 import time
+import torch
 # nltk.download()
 
 
@@ -21,6 +22,17 @@ def easy_preprocess(data):
     y_dict = {0: 0,  4: 1}
     y = data['label'].map(y_dict).tolist()
     return X,y
+
+def binary_accuracy(preds, y):
+    """
+    Returns accuracy per batch, i.e. if you get 8/10 right, this returns 0.8, NOT 8
+    """
+
+    #round predictions to the closest integer
+    rounded_preds = torch.round(torch.sigmoid(preds))
+    correct = (rounded_preds == y).float() #convert into float for division 
+    acc = correct.sum()/len(correct)
+    return acc
 
 class preprocess:
     _r4 = "\\【.*?】+|\\《.*?》+|\\#.*?#+|[.!/_,$&%^*()<>+""'?@|:~{}#]+|[——！\\\，。=？、：“”‘’￥……（）《》【】]"
