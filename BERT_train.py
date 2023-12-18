@@ -9,12 +9,12 @@ from utils import *
 from train import *
 
 if __name__ == '__main__':
-    train_data = pd.read_csv("data/training.1600000.processed.noemoticon.csv" ,names=['label', 'id', 'day', 'query', 'user', 'tweets'],encoding = "ISO-8859-1")
-    test_data = pd.read_csv("data/testdata.manual.2009.06.14.csv" ,names=['label', 'id', 'day', 'query', 'user', 'tweets'],encoding = "ISO-8859-1")
-    dataset = SentimentDataset(train_data) # 构建数据集，可以传入参数词向量的最大长度:maxlength
+    train_data = pd.read_csv("data/train_processed.csv" ,encoding = "ISO-8859-1")
+    test_data = pd.read_csv("data/test_processed.csv" ,encoding = "ISO-8859-1")
+    dataset = SentimentDataset(train_data,maxlength=100) # 构建数据集，可以传入参数词向量的最大长度:maxlength
     
     ## 缩小数据集
-    train_size = int(0.9999 * len(dataset))   
+    train_size = int(0.9 * len(dataset))   
     valid_size = len(dataset) - train_size
     train_dataset, dataset = random_split(dataset, [train_size, valid_size])
     ##
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     valid_size = len(dataset) - train_size
 
     train_dataset, valid_dataset = random_split(dataset, [train_size, valid_size])
-    test_dataset = SentimentDataset(test_data)
+    test_dataset = SentimentDataset(test_data,maxlength=100)
 
     batch_size = 8
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
 
-    # bert_train(num_epochs, model, train_dataloader,valid_dataloader, device,optimizer,batch_size,load_path = 'results/model', save_path = 'results/model1')
-    # save_results(test_dataloader,device = torch.device('cpu'),model_name = 'results/model1')
+    bert_train(num_epochs, model, train_dataloader,valid_dataloader, device,optimizer,batch_size,load_path = 'results/model1', save_path = 'results/model2')
+    # save_results(test_dataloader,device = torch.device('cpu'),model_name = 'results/model2')
 
-    bert_test(test_dataloader,device, 'results/model1')
+    bert_test(test_dataloader,device, 'results/mode2')

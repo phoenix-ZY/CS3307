@@ -86,14 +86,14 @@ class preprocess:
         tqdm.pandas()
         train_file['tweets'] = train_file['tweets'].progress_apply(self._remove_notes)
 
-        train_file['tweets'] = train_file['tweets'].progress_apply(self._remove_stopwords)
+        # train_file['tweets'] = train_file['tweets'].progress_apply(self._remove_stopwords)
 
-        train_file['tweets'] = train_file['tweets'].progress_apply(self._lemmatization)
+        # train_file['tweets'] = train_file['tweets'].progress_apply(self._lemmatization)
 
         train_file = train_file[~(train_file['tweets'].str.len() == 0)]
 
         if save:
-            train_file.to_csv('data/test_processed.csv', encoding='utf-8', index=False)
+            train_file.to_csv('data/train_easy_processed.csv', encoding='utf-8', index=False)
         return train_file
 
     def testandtry(self,text):
