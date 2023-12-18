@@ -22,11 +22,11 @@ if __name__ == '__main__':
     test_data = pd.read_csv("data/test_processed.csv" ,encoding = "ISO-8859-1",dtype={'tweets': str, 'label':int})
     dataset = SentimentDataset(train_data,maxlength=100) # 构建数据集，可以传入参数词向量的最大长度:maxlength
 
-    ## 缩小数据集
-    train_size = int(0.9 * len(dataset))   
-    valid_size = len(dataset) - train_size
-    train_dataset, dataset = random_split(dataset, [train_size, valid_size])
-    ##
+    # ## 缩小数据集
+    # train_size = int(0.9 * len(dataset))   
+    # valid_size = len(dataset) - train_size
+    # train_dataset, dataset = random_split(dataset, [train_size, valid_size])
+    # ##
 
     train_size = int(0.9 * len(dataset))  # 使用90%的数据作为训练集
     valid_size = len(dataset) - train_size
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     EMBEDDING_DIM = 100
     OUTPUT_DIM = 1
     PAD_IDX = tokenizer.pad_token_id
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
     # model = WordAVGModel(INPUT_DIM, EMBEDDING_DIM, OUTPUT_DIM, PAD_IDX)
     model = RNN(INPUT_DIM, EMBEDDING_DIM, 60,OUTPUT_DIM,6, True,0.1,PAD_IDX)
     optimizer = optim.Adam(model.parameters())
@@ -52,6 +52,6 @@ if __name__ == '__main__':
     criterion = criterion.to(device)
     N_EPOCHS = 10
 
-    train(N_EPOCHS,model,train_dataloader,valid_dataloader, device, optimizer, criterion,batch_size,load_path="results/RNNmodel/RNNmodel.pt",save_path="results/RNNmodel/RNNmodel1.pt")
-    model = RNN(INPUT_DIM, EMBEDDING_DIM, 60,OUTPUT_DIM,6, True,0.1,PAD_IDX)
-    test(test_dataloader,device,model,"results/RNNmodel/RNNmodel1.pt")
+    train(N_EPOCHS,model,train_dataloader,valid_dataloader, device, optimizer, criterion,batch_size,save_path="results/RNNmodel/RNNmodel20_3.pt")
+    model = RNN(INPUT_DIM, EMBEDDING_DIM,20 ,OUTPUT_DIM,3, True,0.1,PAD_IDX)
+    test(test_dataloader,device,model,"results/RNNmodel/RNNmodel20_3.pt")

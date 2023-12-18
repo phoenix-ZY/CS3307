@@ -17,6 +17,26 @@ def accuracy_score(y_true, y_pred):
     correct = sum(1 for true, pred in zip(y_true, y_pred) if true == pred)
     accuracy = correct / len(y_true)
     return accuracy
+def precision_recall_f1_score(y_true, y_pred):
+    assert len(y_true) == len(y_pred), "y_true and y_pred must have the same length."
+    TP = sum(1 for true, pred in zip(y_true, y_pred) if true == pred and true == 1)
+    FP = sum(1 for true, pred in zip(y_true, y_pred) if true != pred and pred == 1)
+    FN = sum(1 for true, pred in zip(y_true, y_pred) if true != pred and true == 1)
+    
+    precision = TP / (TP + FP) if (TP + FP) > 0 else 0
+    recall = TP / (TP + FN) if (TP + FN) > 0 else 0
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    
+    return precision, recall, f1
+
+def get_wrong_id(y_true, y_pred):
+    numbers = []
+    for i in range(len(y_true)):
+        if(y_true[i] == 0 and y_pred[i] == 1 ):
+            numbers.append(i)
+    return numbers
+
+    
 def easy_preprocess(data):
     X = data['tweets'].tolist()
     y_dict = {0: 0,  4: 1}

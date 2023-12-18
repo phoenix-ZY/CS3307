@@ -3,9 +3,12 @@ import torch
 from utils import *
 from tqdm import tqdm
 import numpy as np
+import torch.optim as optim
 def bert_train(num_epochs,model,train_dataloader,valid_dataloader,device,optimizer,batch_size,load_path= "",save_path= ""):
+    best_valid_loss = float('inf')
     if load_path:
         model = DistilBertForSequenceClassification.from_pretrained(load_path, num_labels=2)
+        optimizer = AdamW(model.parameters(), lr=2e-5)
     model = model.to(device)
     for epoch in range(num_epochs):
         loop = tqdm(train_dataloader, total =len(train_dataloader))
@@ -35,8 +38,10 @@ def bert_train(num_epochs,model,train_dataloader,valid_dataloader,device,optimiz
             predictions = torch.argmax(logits, dim=1)
             now_right =  (predictions == labels).sum()
             right += now_right
-            loop.set_description(f'Epoch [{epoch + 1}/{num_epochs}]')
-            loop.set_postfix(loss=loss, acc=float(now_right)/float(batch_size))
+            if times % 20 == 0:
+                acc=float(now_right)/float(batch_size)
+                print(f'Epoch [{epoch + 1}/{num_epochs}]')
+                print(f'loss: {loss}    acc: {acc}')
 
 
         avg_loss = total_loss / len(train_dataloader)
@@ -47,32 +52,40 @@ def bert_train(num_epochs,model,train_dataloader,valid_dataloader,device,optimiz
         y_true = []
         y_pred = []
         times = 0
+        total_loss = 0
         loop = tqdm(valid_dataloader, total =len(valid_dataloader))
         with torch.no_grad():
             for batch in loop:
+                times+=1
                 input_ids = batch['sentence'].to(device)
                 attention_mask = batch['attention_mask'].to(device)
                 labels = batch['label'].to(device)
 
-                outputs = model(input_ids, attention_mask=attention_mask)
+                outputs = model(input_ids, attention_mask=attention_mask,labels=labels)
+                loss = outputs.loss
+                total_loss += loss.item()
                 logits = outputs.logits
                 predictions = torch.argmax(logits, dim=1)
                 now_right =  (predictions == labels).sum()
-                print(predictions)
-                print(labels)
                 right += now_right
-                loop.set_description(f'Epoch [{epoch + 1}/{num_epochs}]')
-                loop.set_postfix(loss=loss, acc=float(now_right)/float(batch_size))
+                if times %20 == 0:
+                    acc=float(now_right)/float(batch_size)
+                    print(f'Epoch [{epoch + 1}/{num_epochs}]')
+                    print(f'loss: {loss}    acc: {acc}')
 
         valid_accuracy = float(right)/(float(len(valid_dataloader) * batch_size))
         print(f'Epoch {epoch+1}/{num_epochs} - Valid Accuracy: {valid_accuracy}')
-    if(save_path):
-        model.save_pretrained(save_path)
+        avg_loss = total_loss / len(train_dataloader)
+        if avg_loss < best_valid_loss and save_path:
+            best_valid_loss = avg_loss
+            model.save_pretrained(save_path)
+
 
 def train(num_epochs,model,train_dataloader,valid_dataloader,device,optimizer,criterion,batch_size,load_path = "",save_path = ""):
     best_valid_loss = float('inf')
     if load_path:
         model.load_state_dict(torch.load(load_path))
+        optimizer = optim.Adam(model.parameters())
     model = model.to(device)
     for epoch in range(num_epochs):
         loop = tqdm(train_dataloader, total =len(train_dataloader))
@@ -98,11 +111,13 @@ def train(num_epochs,model,train_dataloader,valid_dataloader,device,optimizer,cr
             optimizer.step()
             now_right =  (torch.round(torch.sigmoid(outputs)) == labels).sum()
             right += now_right
-            if times %50 == 0:
-                loop.set_description(f'Epoch [{epoch + 1}/{num_epochs}]')
-                loop.set_postfix(loss=loss, acc=float(now_right)/float(batch_size))
+            if times % 200 == 0:
+                acc=float(now_right)/float(batch_size)
+                print(f'Epoch [{epoch + 1}/{num_epochs}]')
+                print(f'loss: {loss}    acc: {acc}')
 
         avg_loss = total_loss / len(train_dataloader)
+        
         print(f'Epoch {epoch+1}/{num_epochs} - Train Loss: {avg_loss}')
 
         # 验证
@@ -113,6 +128,7 @@ def train(num_epochs,model,train_dataloader,valid_dataloader,device,optimizer,cr
         right = 0
         total_loss = 0
         loop = tqdm(valid_dataloader, total =len(valid_dataloader))
+        times = 0
         with torch.no_grad():
             for batch in loop:
                 input_ids = batch['sentence'].to(device)
@@ -124,8 +140,10 @@ def train(num_epochs,model,train_dataloader,valid_dataloader,device,optimizer,cr
                 total_loss += loss.item()
                 now_right =  (torch.round(torch.sigmoid(outputs)) == labels).sum()
                 right += now_right
-                loop.set_description(f'Epoch [{epoch + 1}/{num_epochs}]')
-                loop.set_postfix(loss=loss, acc=float(now_right)/float(batch_size))
+                if times % 200 == 0:
+                    acc=float(now_right)/float(batch_size)
+                    print(f'Epoch [{epoch + 1}/{num_epochs}]')
+                    print(f'loss: {loss}    acc: {acc}')
 
         valid_accuracy = float(right)/(float(len(valid_dataloader) * batch_size))
         print(f'Epoch {epoch+1}/{num_epochs} - Valid Accuracy: {valid_accuracy}')
@@ -156,9 +174,14 @@ def bert_test(test_dataloader,device,model_name):
 
             y_true.extend(labels.tolist())
             y_pred.extend(predictions.tolist())
-
     valid_accuracy = accuracy_score(y_true, y_pred)
+    precision, recall, f1 = precision_recall_f1_score(y_true, y_pred)
+    ids = get_wrong_id(y_true, y_pred)
+    print("ids",ids)
     print(f'test Accuracy: {valid_accuracy}')
+    print("Precision:", precision)
+    print("Recall:", recall)
+    print("F1 Score:", f1)
 
 def test(test_dataloader,device,model, load_path):
     if load_path:
