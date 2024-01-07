@@ -106,6 +106,8 @@ class preprocess:
         tqdm.pandas()
         train_file['tweets'] = train_file['tweets'].progress_apply(self._remove_notes)
 
+        ## 若为复杂处理，则取消注释下面两行
+        
         # train_file['tweets'] = train_file['tweets'].progress_apply(self._remove_stopwords)
 
         # train_file['tweets'] = train_file['tweets'].progress_apply(self._lemmatization)
