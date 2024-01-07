@@ -54,3 +54,18 @@ CS3307 课程大作业：情感分析
 - train.py: 用于pytorch训练的一些工具代码
 - utils.py: 用于数据处理等一些的工具代码
 
+
+## 最终准确率实现实验过程
+
+### 数据预处理
+
+1. 将csv数据文件保存在data文件夹下
+2. 运行 get_preprocessd_data.py 在data文件夹下 生成train_easy_processed.csv 和test_easy_processed.csv（通过修改 get_preprocessd_data.py 和utils.py中的文件路径使得train变为test）
+
+### 模型训练
+
+1. 将 BERT_train.py line44 的load_path参数置为空，然后运行 BERT_train.py，其中出现路径的地方需要自己创建空文件夹。
+
+### 模型可视化
+
+1. 将BERT_train.py line47 的save_results() 函数取消注释。该函数可以在results文件夹下生成中间层的向量，然后调用PCA.py  或T-SNE.py可以对中间层进行可视化分析。

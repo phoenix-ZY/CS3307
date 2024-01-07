@@ -9,6 +9,8 @@ def bert_train(num_epochs,model,train_dataloader,valid_dataloader,device,optimiz
     if load_path:
         model = DistilBertForSequenceClassification.from_pretrained(load_path, num_labels=2)
         optimizer = AdamW(model.parameters(), lr=2e-5)
+    device_ids = [0, 1,2,3]
+    model = torch.nn.DataParallel(model, device_ids=device_ids)
     model = model.to(device)
     for epoch in range(num_epochs):
         loop = tqdm(train_dataloader, total =len(train_dataloader))
@@ -28,9 +30,9 @@ def bert_train(num_epochs,model,train_dataloader,valid_dataloader,device,optimiz
             
             outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
             loss = outputs.loss
-            total_loss += loss.item()
+            total_loss += loss.sum().item()
 
-            loss.backward()
+            loss.sum().backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
             optimizer.step()
@@ -38,10 +40,6 @@ def bert_train(num_epochs,model,train_dataloader,valid_dataloader,device,optimiz
             predictions = torch.argmax(logits, dim=1)
             now_right =  (predictions == labels).sum()
             right += now_right
-            if times % 20 == 0:
-                acc=float(now_right)/float(batch_size)
-                print(f'Epoch [{epoch + 1}/{num_epochs}]')
-                print(f'loss: {loss}    acc: {acc}')
 
 
         avg_loss = total_loss / len(train_dataloader)
@@ -63,22 +61,19 @@ def bert_train(num_epochs,model,train_dataloader,valid_dataloader,device,optimiz
 
                 outputs = model(input_ids, attention_mask=attention_mask,labels=labels)
                 loss = outputs.loss
-                total_loss += loss.item()
+                total_loss += loss.sum().item()
                 logits = outputs.logits
                 predictions = torch.argmax(logits, dim=1)
                 now_right =  (predictions == labels).sum()
                 right += now_right
-                if times %20 == 0:
-                    acc=float(now_right)/float(batch_size)
-                    print(f'Epoch [{epoch + 1}/{num_epochs}]')
-                    print(f'loss: {loss}    acc: {acc}')
-
+        avg_loss = total_loss / len(valid_dataloader)
+        print(f'Epoch {epoch+1}/{num_epochs} - Valid Loss: {avg_loss}')
         valid_accuracy = float(right)/(float(len(valid_dataloader) * batch_size))
         print(f'Epoch {epoch+1}/{num_epochs} - Valid Accuracy: {valid_accuracy}')
-        avg_loss = total_loss / len(train_dataloader)
+
         if avg_loss < best_valid_loss and save_path:
             best_valid_loss = avg_loss
-            model.save_pretrained(save_path)
+            model.module.save_pretrained(save_path)
 
 
 def train(num_epochs,model,train_dataloader,valid_dataloader,device,optimizer,criterion,batch_size,load_path = "",save_path = ""):
@@ -111,10 +106,6 @@ def train(num_epochs,model,train_dataloader,valid_dataloader,device,optimizer,cr
             optimizer.step()
             now_right =  (torch.round(torch.sigmoid(outputs)) == labels).sum()
             right += now_right
-            if times % 200 == 0:
-                acc=float(now_right)/float(batch_size)
-                print(f'Epoch [{epoch + 1}/{num_epochs}]')
-                print(f'loss: {loss}    acc: {acc}')
 
         avg_loss = total_loss / len(train_dataloader)
         
@@ -140,14 +131,12 @@ def train(num_epochs,model,train_dataloader,valid_dataloader,device,optimizer,cr
                 total_loss += loss.item()
                 now_right =  (torch.round(torch.sigmoid(outputs)) == labels).sum()
                 right += now_right
-                if times % 200 == 0:
-                    acc=float(now_right)/float(batch_size)
-                    print(f'Epoch [{epoch + 1}/{num_epochs}]')
-                    print(f'loss: {loss}    acc: {acc}')
 
+        avg_loss = total_loss / len(valid_dataloader)
+        print(f'Epoch {epoch+1}/{num_epochs} - Valid Loss: {avg_loss}')
         valid_accuracy = float(right)/(float(len(valid_dataloader) * batch_size))
         print(f'Epoch {epoch+1}/{num_epochs} - Valid Accuracy: {valid_accuracy}')
-        avg_loss = total_loss / len(train_dataloader)
+
         if avg_loss < best_valid_loss and save_path:
             best_valid_loss = avg_loss
             torch.save(model.state_dict(), save_path)
@@ -176,8 +165,8 @@ def bert_test(test_dataloader,device,model_name):
             y_pred.extend(predictions.tolist())
     valid_accuracy = accuracy_score(y_true, y_pred)
     precision, recall, f1 = precision_recall_f1_score(y_true, y_pred)
-    ids = get_wrong_id(y_true, y_pred)
-    print("ids",ids)
+    # ids = get_wrong_id(y_true, y_pred)
+    # print("ids",ids)
     print(f'test Accuracy: {valid_accuracy}')
     print("Precision:", precision)
     print("Recall:", recall)
