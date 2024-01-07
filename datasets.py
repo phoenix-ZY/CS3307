@@ -11,6 +11,7 @@ class SentimentDataset(Dataset):
             self.max_length = maxlength
         else:
             self.max_length = self.getmax_length()
+        print(self.getmax_length())
     def __len__(self):
         return len(self.sentences)
     def __getitem__(self, idx):
